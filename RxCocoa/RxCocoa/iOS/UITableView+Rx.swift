@@ -15,6 +15,15 @@ import UIKit
 public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     public typealias CellFactory = (UITableView, NSIndexPath, AnyObject) -> UITableViewCell
     
+    public typealias RowDeletedObserver = ObserverOf<(UITableView, Int)>
+    public typealias RowMovedObserver = ObserverOf<(tableView: UITableView, from: Int, to: Int)>
+    
+    public typealias RowDeletedDisposeKey = Bag<RowDeletedObserver>.KeyType
+    public typealias RowMovedDisposeKey = Bag<RowMovedObserver>.KeyType
+    
+    var tableViewRowDeletedObservers: Bag<RowDeletedObserver>
+    var tableViewRowMovedObservers: Bag<RowMovedObserver>
+    
     public var rows: [AnyObject] {
         get {
             return _rows
@@ -26,8 +35,40 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     let cellFactory: CellFactory
     
     public init(cellFactory: CellFactory) {
+        tableViewRowDeletedObservers = Bag()
+        tableViewRowMovedObservers = Bag()
         self._rows = []
         self.cellFactory = cellFactory
+    }
+    
+    public func addTableViewRowDeletedObserver(observer: RowDeletedObserver) -> RowDeletedDisposeKey {
+        MainScheduler.ensureExecutingOnScheduler()
+        
+        return tableViewRowDeletedObservers.put(observer)
+    }
+    
+    public func addTableViewRowMovedObserver(observer: RowMovedObserver) -> RowMovedDisposeKey {
+        MainScheduler.ensureExecutingOnScheduler()
+        
+        return tableViewRowMovedObservers.put(observer)
+    }
+    
+    public func removeTableViewRowDeletedObserver(key: RowDeletedDisposeKey) {
+        MainScheduler.ensureExecutingOnScheduler()
+        
+        let element = tableViewRowDeletedObservers.removeKey(key)
+        if element == nil {
+            removingObserverFailed()
+        }
+    }
+    
+    public func removeTableViewRowMovedObserver(key: RowMovedDisposeKey) {
+        MainScheduler.ensureExecutingOnScheduler()
+        
+        let element = tableViewRowMovedObservers.removeKey(key)
+        if element == nil {
+            removingObserverFailed()
+        }
     }
     
     public func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -49,28 +90,42 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
             return cell!
         }
     }
+    
+    public func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        if tableViewRowDeletedObservers.count > 0 {
+            return true
+        }
+        return false
+    }
+    
+    public func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+        if editingStyle == .Delete {
+            dispatchNext((tableView, indexPath.row), tableViewRowDeletedObservers)
+        }
+    }
 }
 
 public class RxTableViewDelegate: RxScrollViewDelegate, UITableViewDelegate {
-    public typealias Observer = ObserverOf<(UITableView, Int)>
-    public typealias DisposeKey = Bag<Observer>.KeyType
+    public typealias RowTapedObserver = ObserverOf<(UITableView, Int)>
     
-    var tableViewObservers: Bag<Observer>
+    public typealias RowTapedDisposeKey = Bag<RowTapedObserver>.KeyType
+    
+    var tableViewRowTapedObservers: Bag<RowTapedObserver>
     
     override public init() {
-        tableViewObservers = Bag()
+        tableViewRowTapedObservers = Bag()
     }
     
-    public func addTableViewObserver(observer: Observer) -> DisposeKey {
+    public func addTableViewRowTapedObserver(observer: RowTapedObserver) -> RowTapedDisposeKey {
         MainScheduler.ensureExecutingOnScheduler()
         
-        return tableViewObservers.put(observer)
+        return tableViewRowTapedObservers.put(observer)
     }
     
-    public func removeTableViewObserver(key: DisposeKey) {
+    public func removeTableViewRowTapedObserver(key: RowTapedDisposeKey) {
         MainScheduler.ensureExecutingOnScheduler()
         
-        let element = tableViewObservers.removeKey(key)
+        let element = tableViewRowTapedObservers.removeKey(key)
         if element == nil {
             removingObserverFailed()
         }
@@ -79,11 +134,11 @@ public class RxTableViewDelegate: RxScrollViewDelegate, UITableViewDelegate {
     public func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
         
-        dispatchNext((tableView, indexPath.row), tableViewObservers)
+        dispatchNext((tableView, indexPath.row), tableViewRowTapedObservers)
     }
     
     deinit {
-        if tableViewObservers.count > 0 {
+        if tableViewRowTapedObservers.count > 0 {
             handleVoidObserverResult(failure(rxError(RxCocoaError.InvalidOperation, "Something went wrong. Deallocating table view delegate while there are still subscribed observers means that some subscription was left undisposed.")))
         }
     }
@@ -93,6 +148,10 @@ public class RxTableViewDelegate: RxScrollViewDelegate, UITableViewDelegate {
 extension UITableView {
     override func rx_createDelegate() -> RxScrollViewDelegate {
         return RxTableViewDelegate()
+    }
+    
+    func rx_createDataSource() -> RxTableViewDataSource {
+        return RxTableViewDataSource(cellFactory: { a, b, c in UITableViewCell() })
     }
     
     public func rx_subscribeRowsTo<E where E: AnyObject>
@@ -174,21 +233,47 @@ extension UITableView {
                 maybeDelegate = delegate
                 self.delegate = maybeDelegate
             }
-    
+            
             let delegate = maybeDelegate!
             
-            let key = delegate.addTableViewObserver(observer)
+            let key = delegate.addTableViewRowTapedObserver(observer)
             
             return AnonymousDisposable {
                 MainScheduler.ensureExecutingOnScheduler()
                 
                 _ = self.rx_checkTableViewDelegate()
                 
-                delegate.removeTableViewObserver(key)
+                delegate.removeTableViewRowTapedObserver(key)
                 
-                if delegate.tableViewObservers.count == 0 {
+                if delegate.tableViewRowTapedObservers.count == 0 {
                     self.delegate = nil
                 }
+            }
+        }
+    }
+    
+    public func rx_rowDelete() -> Observable<(UITableView, Int)> {
+        _ = rx_checkTableViewDataSource()
+        
+        return AnonymousObservable { observer in
+            MainScheduler.ensureExecutingOnScheduler()
+            
+            var maybeDataSource = self.rx_checkTableViewDataSource()
+            
+            if maybeDataSource == nil {
+                rxFatalError("To use rx_rowDelete your table datasource must be a RxTableViewDelegate")
+            }
+            
+            let dataSource = maybeDataSource!
+            
+            let key = dataSource.addTableViewRowDeletedObserver(observer)
+            
+            return AnonymousDisposable {
+                MainScheduler.ensureExecutingOnScheduler()
+                
+                _ = self.rx_checkTableViewDataSource()
+                
+                dataSource.removeTableViewRowDeletedObserver(key)
             }
         }
     }
@@ -226,7 +311,7 @@ extension UITableView {
         return maybeDataSource!
     }
     
-    private func rx_checkTableViewDataSource<E>() -> RxTableViewDataSource? {
+    private func rx_checkTableViewDataSource() -> RxTableViewDataSource? {
         MainScheduler.ensureExecutingOnScheduler()
         
         if self.dataSource == nil {

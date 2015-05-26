@@ -24,28 +24,26 @@ class TableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.dataSource = nil // it is necesary
+        self.navigationItem.rightBarButtonItem = self.editButtonItem()
         
+        tableView.delegate = tvdt
+        tableView.dataSource = nil
         
         let cellFactory = { (tv:UITableView, ip: NSIndexPath, obj: AnyObject) -> UITableViewCell in
             let cell = tv.dequeueReusableCellWithIdentifier("Cell") as! UITableViewCell
-            
             let payback = (obj as! Payback)
-            
             cell.textLabel?.text = payback.firstName + " " + payback.lastName
-            
             return cell
         }
         
         let tvds = RxTableViewDataSource(cellFactory: cellFactory)
-        tableView.delegate = tvdt
         
         tableView.rx_rowTap()
             >- subscribeNext { (tv, index) in
                 let sb = UIStoryboard(name: "Main", bundle: NSBundle(identifier: "RxExample-iOS"))
                 let vc = sb.instantiateViewControllerWithIdentifier("DetailViewController") as! DetailViewController
                 self.navigationController?.pushViewController(vc, animated: true)
-        }
+            }
         
         paybacks
             >- tableView.rx_subscribeRowsTo(tvds)
@@ -55,6 +53,12 @@ class TableViewController: UITableViewController {
                 self.removePayback(index)
             }
         
+        tableView.rx_rowMove()
+            >- subscribeNext { (tv, from, to) in
+                self.movePaybackFrom(from, to: to)
+            }
+        
+        
         addPayback(Payback(firstName: "Kruno", lastName: "Zaher", createdAt: NSDate(), amount: 22))
         
         delay(1) { [unowned self] in
@@ -63,6 +67,13 @@ class TableViewController: UITableViewController {
         
     }
     
+    
+    func movePaybackFrom(from: Int, to: Int) {
+        var array = paybacks.value
+        let payback = array.removeAtIndex(from)
+        array.insert(payback, atIndex: to)
+        paybacks.next(array)
+    }
     
     func addPayback(payback: Payback) {
         var array = paybacks.value

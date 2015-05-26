@@ -103,6 +103,17 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
             dispatchNext((tableView, indexPath.row), tableViewRowDeletedObservers)
         }
     }
+    
+    public func tableView(tableView: UITableView, canMoveRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        if tableViewRowMovedObservers.count > 0 {
+            return true
+        }
+        return false
+    }
+    
+    public func tableView(tableView: UITableView, moveRowAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
+        dispatchNext((tableView, sourceIndexPath.row, destinationIndexPath.row), tableViewRowMovedObservers)
+    }
 }
 
 public class RxTableViewDelegate: RxScrollViewDelegate, UITableViewDelegate {
@@ -274,6 +285,32 @@ extension UITableView {
                 _ = self.rx_checkTableViewDataSource()
                 
                 dataSource.removeTableViewRowDeletedObserver(key)
+            }
+        }
+    }
+    
+    public func rx_rowMove() -> Observable<(tableView: UITableView, from: Int, to: Int)> {
+        _ = rx_checkTableViewDataSource()
+        
+        return AnonymousObservable { observer in
+            MainScheduler.ensureExecutingOnScheduler()
+            
+            var maybeDataSource = self.rx_checkTableViewDataSource()
+            
+            if maybeDataSource == nil {
+                rxFatalError("To use rx_rowMove your table datasource must be a RxTableViewDelegate")
+            }
+            
+            let dataSource = maybeDataSource!
+            
+            let key = dataSource.addTableViewRowMovedObserver(observer)
+            
+            return AnonymousDisposable {
+                MainScheduler.ensureExecutingOnScheduler()
+                
+                _ = self.rx_checkTableViewDataSource()
+                
+                dataSource.removeTableViewRowMovedObserver(key)
             }
         }
     }

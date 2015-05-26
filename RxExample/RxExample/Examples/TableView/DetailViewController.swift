@@ -9,6 +9,8 @@
 import UIKit
 
 class DetailViewController: UIViewController {
+    
+    weak var masterVC: TableViewController!
 
     override func viewDidLoad() {
         super.viewDidLoad()

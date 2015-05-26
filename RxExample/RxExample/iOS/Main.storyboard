@@ -49,6 +49,25 @@
             </objects>
             <point key="canvasLocation" x="-185" y="1640"/>
         </scene>
+        <!--Detail View Controller-->
+        <scene sceneID="n26-Ac-tgu">
+            <objects>
+                <viewController storyboardIdentifier="DetailViewController" id="ack-C5-IwI" customClass="DetailViewController" customModule="RxExample" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="ByU-ts-Mke"/>
+                        <viewControllerLayoutGuide type="bottom" id="zIc-eF-yeA"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="kAJ-gM-Vtu">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="NGu-t4-MLa" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="199" y="1640"/>
+        </scene>
         <!--GitHub Signup-->
         <scene sceneID="N2N-1B-sZ4">
             <objects>
@@ -220,7 +239,7 @@
                                                     <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="MVVM Table View Example" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="nuf-1K-ITV">
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" text="MVVM Table View Master Detail Example" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="nuf-1K-ITV">
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="11"/>
                                                     <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>

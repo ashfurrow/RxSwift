@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0706E1961B14AF5100BA2D3A /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0706E1951B14AF5100BA2D3A /* DetailViewController.swift */; };
 		07E300071B14995F00F00100 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E300061B14995F00F00100 /* TableViewController.swift */; };
 		07E300091B149A2A00F00100 /* Payback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E300081B149A2A00F00100 /* Payback.swift */; };
 		07E3C2331B03605B0010338D /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E3C2321B03605B0010338D /* Dependencies.swift */; };
@@ -85,6 +86,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0706E1951B14AF5100BA2D3A /* DetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
 		07E300061B14995F00F00100 /* TableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 		07E300081B149A2A00F00100 /* Payback.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Payback.swift; sourceTree = "<group>"; };
 		07E3C2321B03605B0010338D /* Dependencies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Dependencies.swift; path = Examples/Dependencies.swift; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 			children = (
 				07E300081B149A2A00F00100 /* Payback.swift */,
 				07E300061B14995F00F00100 /* TableViewController.swift */,
+				0706E1951B14AF5100BA2D3A /* DetailViewController.swift */,
 			);
 			path = TableView;
 			sourceTree = "<group>";
@@ -418,6 +421,7 @@
 				C8DF92DC1B0B3174009BCF9A /* WikipediaSearchViewController.swift in Sources */,
 				C8DF92D81B0B3174009BCF9A /* CollectionViewImageCell.swift in Sources */,
 				C86E2F3F1AE5A0CA00C31024 /* SearchViewModel.swift in Sources */,
+				0706E1961B14AF5100BA2D3A /* DetailViewController.swift in Sources */,
 				C83367251AD029AE00C668A7 /* ImageService.swift in Sources */,
 				C86E2F471AE5A0CA00C31024 /* WikipediaSearchResult.swift in Sources */,
 				C890A65A1AEBD28A00AFF7E6 /* GitHubAPI.swift in Sources */,

@@ -15,7 +15,7 @@ import UIKit
 public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     public typealias CellFactory = (UITableView, NSIndexPath, AnyObject) -> UITableViewCell
     
-    public typealias RowDeletedObserver = ObserverOf<(UITableView, Int)>
+    public typealias RowDeletedObserver = ObserverOf<(tableView: UITableView, row: Int)>
     public typealias RowMovedObserver = ObserverOf<(tableView: UITableView, from: Int, to: Int)>
     
     public typealias RowDeletedDisposeKey = Bag<RowDeletedObserver>.KeyType
@@ -106,7 +106,7 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
 }
 
 public class RxTableViewDelegate: RxScrollViewDelegate, UITableViewDelegate {
-    public typealias RowTapedObserver = ObserverOf<(UITableView, Int)>
+    public typealias RowTapedObserver = ObserverOf<(tableView: UITableView, row: Int)>
     
     public typealias RowTapedDisposeKey = Bag<RowTapedObserver>.KeyType
     
@@ -220,7 +220,7 @@ extension UITableView {
         return self.rx_subscribeRowsTo(dataSource)(source: source)
     }
     
-    public func rx_rowTap() -> Observable<(UITableView, Int)> {
+    public func rx_rowTap() -> Observable<(tableView: UITableView, row: Int)> {
         _ = rx_checkTableViewDelegate()
         
         return AnonymousObservable { observer in
@@ -252,7 +252,7 @@ extension UITableView {
         }
     }
     
-    public func rx_rowDelete() -> Observable<(UITableView, Int)> {
+    public func rx_rowDelete() -> Observable<(tableView: UITableView, row: Int)> {
         _ = rx_checkTableViewDataSource()
         
         return AnonymousObservable { observer in

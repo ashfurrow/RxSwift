@@ -40,6 +40,13 @@ class TableViewController: UITableViewController {
         let tvds = RxTableViewDataSource(cellFactory: cellFactory)
         tableView.delegate = tvdt
         
+        tableView.rx_rowTap()
+            >- subscribeNext { (tv, index) in
+                let sb = UIStoryboard(name: "Main", bundle: NSBundle(identifier: "RxExample-iOS"))
+                let vc = sb.instantiateViewControllerWithIdentifier("DetailViewController") as! DetailViewController
+                self.navigationController?.pushViewController(vc, animated: true)
+        }
+        
         paybacks
             >- tableView.rx_subscribeRowsTo(tvds)
         

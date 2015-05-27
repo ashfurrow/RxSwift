@@ -32,7 +32,7 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     
     var _rows: [AnyObject]
     
-    let cellFactory: CellFactory
+    var cellFactory: CellFactory! = nil
     
     public init(cellFactory: CellFactory) {
         tableViewRowDeletedObservers = Bag()
@@ -82,6 +82,9 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     public func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         if indexPath.row < _rows.count {
             let row = indexPath.row
+            if cellFactory == nil {
+                rxFatalError("Please subscribe table rows using one of the 'rx_subscribeRowsTo' methods")
+            }
             return cellFactory(tableView, indexPath, self._rows[row])
         }
         else {
@@ -237,15 +240,7 @@ extension UITableView {
         return AnonymousObservable { observer in
             MainScheduler.ensureExecutingOnScheduler()
             
-            var maybeDelegate = self.rx_checkTableViewDelegate()
-            
-            if maybeDelegate == nil {
-                let delegate = self.rx_createDelegate() as! RxTableViewDelegate
-                maybeDelegate = delegate
-                self.delegate = maybeDelegate
-            }
-            
-            let delegate = maybeDelegate!
+            let delegate = self.ensureCorrectDelegate()
             
             let key = delegate.addTableViewRowTapedObserver(observer)
             
@@ -269,13 +264,7 @@ extension UITableView {
         return AnonymousObservable { observer in
             MainScheduler.ensureExecutingOnScheduler()
             
-            var maybeDataSource = self.rx_checkTableViewDataSource()
-            
-            if maybeDataSource == nil {
-                rxFatalError("To use rx_rowDelete your table datasource must be a RxTableViewDelegate")
-            }
-            
-            let dataSource = maybeDataSource!
+            let dataSource = self.ensureCorrectDataSource()
             
             let key = dataSource.addTableViewRowDeletedObserver(observer)
             
@@ -295,13 +284,7 @@ extension UITableView {
         return AnonymousObservable { observer in
             MainScheduler.ensureExecutingOnScheduler()
             
-            var maybeDataSource = self.rx_checkTableViewDataSource()
-            
-            if maybeDataSource == nil {
-                rxFatalError("To use rx_rowMove your table datasource must be a RxTableViewDelegate")
-            }
-            
-            let dataSource = maybeDataSource!
+            let dataSource = self.ensureCorrectDataSource()
             
             let key = dataSource.addTableViewRowMovedObserver(observer)
             
@@ -378,5 +361,31 @@ extension UITableView {
         }
         
         return maybeDelegate!
+    }
+    
+    private func ensureCorrectDelegate() -> RxTableViewDelegate {
+        var maybeDelegate = self.rx_checkTableViewDelegate()
+        
+        if maybeDelegate == nil {
+            let delegate = self.rx_createDelegate() as! RxTableViewDelegate
+            self.delegate = delegate
+            return delegate
+        }
+        else {
+            return maybeDelegate!
+        }
+    }
+    
+    private func ensureCorrectDataSource() -> RxTableViewDataSource {
+        var maybeDataSource = self.rx_checkTableViewDataSource()
+        
+        if maybeDataSource == nil {
+            let dataSource = self.rx_createDataSource()
+            self.dataSource = dataSource
+            return dataSource
+        }
+        else {
+            return maybeDataSource!
+        }
     }
 }

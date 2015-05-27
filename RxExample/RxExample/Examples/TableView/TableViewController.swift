@@ -16,7 +16,9 @@ func delay(delay:Double, closure:()->()) {
         closure)
 }
 
-class TableViewController: UITableViewController {
+class TableViewController: UIViewController {
+    
+    @IBOutlet weak var tableView: UITableView!
     
     let paybacks = Variable([Payback]())
     let tvdt = RxTableViewDelegate()
@@ -36,17 +38,16 @@ class TableViewController: UITableViewController {
             return cell
         }
         
-        let tvds = RxTableViewDataSource(cellFactory: cellFactory)
+        paybacks
+            >- tableView.rx_subscribeRowsTo(cellFactory)
         
         tableView.rx_rowTap()
             >- subscribeNext { (tv, index) in
                 let sb = UIStoryboard(name: "Main", bundle: NSBundle(identifier: "RxExample-iOS"))
                 let vc = sb.instantiateViewControllerWithIdentifier("DetailViewController") as! DetailViewController
+                vc.payback = self.getPayback(index)
                 self.navigationController?.pushViewController(vc, animated: true)
             }
-        
-        paybacks
-            >- tableView.rx_subscribeRowsTo(tvds)
         
         tableView.rx_rowDelete()
             >- subscribeNext { (tv, index) in
@@ -68,6 +69,11 @@ class TableViewController: UITableViewController {
     }
     
     
+    func getPayback(index: Int) -> Payback {
+        var array = paybacks.value
+        return array[index]
+    }
+    
     func movePaybackFrom(from: Int, to: Int) {
         var array = paybacks.value
         let payback = array.removeAtIndex(from)
@@ -85,6 +91,11 @@ class TableViewController: UITableViewController {
         var array = paybacks.value
         array.removeAtIndex(index)
         paybacks.next(array)
+    }
+    
+    override func setEditing(editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        tableView.editing = editing
     }
 
 }

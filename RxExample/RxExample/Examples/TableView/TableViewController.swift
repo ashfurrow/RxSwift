@@ -21,15 +21,11 @@ class TableViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
     let paybacks = Variable([Payback]())
-    let tvdt = RxTableViewDelegate()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         self.navigationItem.rightBarButtonItem = self.editButtonItem()
-        
-        tableView.delegate = tvdt
-        tableView.dataSource = nil
         
         let cellFactory = { (tv:UITableView, ip: NSIndexPath, obj: AnyObject) -> UITableViewCell in
             let cell = tv.dequeueReusableCellWithIdentifier("Cell") as! UITableViewCell

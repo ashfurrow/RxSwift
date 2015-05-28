@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		0706E1961B14AF5100BA2D3A /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0706E1951B14AF5100BA2D3A /* DetailViewController.swift */; };
 		07E300071B14995F00F00100 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E300061B14995F00F00100 /* TableViewController.swift */; };
-		07E300091B149A2A00F00100 /* Payback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E300081B149A2A00F00100 /* Payback.swift */; };
+		07E300091B149A2A00F00100 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E300081B149A2A00F00100 /* User.swift */; };
 		07E3C2331B03605B0010338D /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E3C2321B03605B0010338D /* Dependencies.swift */; };
 		C83367231AD029AE00C668A7 /* Example.swift in Sources */ = {isa = PBXBuildFile; fileRef = C833670F1AD029AE00C668A7 /* Example.swift */; };
 		C83367241AD029AE00C668A7 /* HtmlParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C83367111AD029AE00C668A7 /* HtmlParsing.swift */; };
@@ -88,7 +88,7 @@
 /* Begin PBXFileReference section */
 		0706E1951B14AF5100BA2D3A /* DetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
 		07E300061B14995F00F00100 /* TableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
-		07E300081B149A2A00F00100 /* Payback.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Payback.swift; sourceTree = "<group>"; };
+		07E300081B149A2A00F00100 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		07E3C2321B03605B0010338D /* Dependencies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Dependencies.swift; path = Examples/Dependencies.swift; sourceTree = "<group>"; };
 		C83366DD1AD0293800C668A7 /* RxExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RxExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C833670F1AD029AE00C668A7 /* Example.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Example.swift; sourceTree = "<group>"; };
@@ -148,7 +148,7 @@
 		07E300051B14994500F00100 /* TableView */ = {
 			isa = PBXGroup;
 			children = (
-				07E300081B149A2A00F00100 /* Payback.swift */,
+				07E300081B149A2A00F00100 /* User.swift */,
 				07E300061B14995F00F00100 /* TableViewController.swift */,
 				0706E1951B14AF5100BA2D3A /* DetailViewController.swift */,
 			);
@@ -435,7 +435,7 @@
 				C86E2F451AE5A0CA00C31024 /* WikipediaAPI.swift in Sources */,
 				C8DF92CD1B0B2F84009BCF9A /* AppDelegate.swift in Sources */,
 				C86E2F461AE5A0CA00C31024 /* WikipediaPage.swift in Sources */,
-				07E300091B149A2A00F00100 /* Payback.swift in Sources */,
+				07E300091B149A2A00F00100 /* User.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

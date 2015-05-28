@@ -12,18 +12,37 @@ import RxSwift
 class DetailViewController: UIViewController {
     
     weak var masterVC: TableViewController!
-    var payback: Payback!
+    var user: User!
     
-    @IBOutlet weak var firstNameTF: UITextField!
-    @IBOutlet weak var lastNameTF: UITextField!
-    @IBOutlet weak var amountTF: UITextField!
+    var disposeBag = DisposeBag()
+    
+    @IBOutlet weak var imageView: UIImageView!
+    @IBOutlet weak var label: UILabel!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        firstNameTF.text = payback.firstName
-        lastNameTF.text = payback.lastName
-        amountTF.text = "\(payback.amount)"
+        imageView.layer.cornerRadius = imageView.frame.size.width / 2
+        imageView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        imageView.layer.borderWidth = 5
+        imageView.layer.masksToBounds = true
+        
+        let url = NSURL(string: user.imageURL)!
+        let request = NSURLRequest(URL: url)
+        
+        NSURLSession.sharedSession().rx_data(request)
+            >- observeSingleOn(Dependencies.sharedDependencies.mainScheduler)
+            >- subscribeNext { data in
+                let image = UIImage(data: data)
+                self.imageView.image = image
+            }
+            >- disposeBag.addDisposable
+        
+        label.text = user.firstName + " " + user.lastName
+    }
+    
+    deinit {
+        disposeBag.dispose()
     }
 
 }

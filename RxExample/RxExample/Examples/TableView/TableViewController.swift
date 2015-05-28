@@ -10,18 +10,12 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-func delay(delay:Double, closure:()->()) {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(delay * Double(NSEC_PER_SEC))),
-        dispatch_get_main_queue(),
-        closure)
-}
-
 class TableViewController: UIViewController {
     
     @IBOutlet weak var tableView: UITableView!
     
-    let paybacks = Variable([Payback]())
-
+    let users = Variable([User]())
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -29,69 +23,115 @@ class TableViewController: UIViewController {
         
         let cellFactory = { (tv:UITableView, ip: NSIndexPath, obj: AnyObject) -> UITableViewCell in
             let cell = tv.dequeueReusableCellWithIdentifier("Cell") as! UITableViewCell
-            let payback = (obj as! Payback)
-            cell.textLabel?.text = payback.firstName + " " + payback.lastName
+            let user = (obj as! User)
+            cell.textLabel?.text = user.firstName + " " + user.lastName
             return cell
         }
         
-        paybacks
+        users
             >- tableView.rx_subscribeRowsTo(cellFactory)
         
         tableView.rx_rowTap()
             >- subscribeNext { (tv, index) in
                 let sb = UIStoryboard(name: "Main", bundle: NSBundle(identifier: "RxExample-iOS"))
                 let vc = sb.instantiateViewControllerWithIdentifier("DetailViewController") as! DetailViewController
-                vc.payback = self.getPayback(index)
+                vc.user = self.getUser(index)
                 self.navigationController?.pushViewController(vc, animated: true)
             }
         
         tableView.rx_rowDelete()
             >- subscribeNext { (tv, index) in
-                self.removePayback(index)
+                self.removeUser(index)
             }
         
         tableView.rx_rowMove()
             >- subscribeNext { (tv, from, to) in
-                self.movePaybackFrom(from, to: to)
+                self.moveUserFrom(from, to: to)
             }
         
+        getSearchResults()
+            >- subscribeNext { array in
+                self.users.next(array)
+            }
         
-        addPayback(Payback(firstName: "Kruno", lastName: "Zaher", createdAt: NSDate(), amount: 22))
-        
-        delay(1) { [unowned self] in
-            self.addPayback(Payback(firstName: "Carlos", lastName: "García", createdAt: NSDate(), amount: 22))
-        }
-        
-    }
-    
-    
-    func getPayback(index: Int) -> Payback {
-        var array = paybacks.value
-        return array[index]
-    }
-    
-    func movePaybackFrom(from: Int, to: Int) {
-        var array = paybacks.value
-        let payback = array.removeAtIndex(from)
-        array.insert(payback, atIndex: to)
-        paybacks.next(array)
-    }
-    
-    func addPayback(payback: Payback) {
-        var array = paybacks.value
-        array.append(payback)
-        paybacks.next(array)
-    }
-    
-    func removePayback(index: Int) {
-        var array = paybacks.value
-        array.removeAtIndex(index)
-        paybacks.next(array)
     }
     
     override func setEditing(editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         tableView.editing = editing
     }
-
+    
+    
+    // MARK: Work with Variable
+    
+    func getUser(index: Int) -> User {
+        var array = users.value
+        return array[index]
+    }
+    
+    func moveUserFrom(from: Int, to: Int) {
+        var array = users.value
+        let user = array.removeAtIndex(from)
+        array.insert(user, atIndex: to)
+        users.next(array)
+    }
+    
+    func addUser(user: User) {
+        var array = users.value
+        array.append(user)
+        users.next(array)
+    }
+    
+    func removeUser(index: Int) {
+        var array = users.value
+        array.removeAtIndex(index)
+        users.next(array)
+    }
+    
+    
+    // MARK: RandomUser API
+    
+    private func getSearchResults() -> Observable<[User]> {
+        let url = NSURL(string: "http://api.randomuser.me/?results=20")!
+        return NSURLSession.sharedSession().rx_JSON(url)
+            >- observeSingleOn(Dependencies.sharedDependencies.backgroundWorkScheduler)
+            >- mapOrDie { json in
+                return castOrFail(json).flatMap { (json: [String: AnyObject]) in
+                    return self.parseJSON(json)
+                }
+            }
+            >- observeSingleOn(Dependencies.sharedDependencies.mainScheduler)
+    }
+    
+    private func parseJSON(json: [String: AnyObject]) -> RxResult<[User]> {
+        let results = json["results"] as? [[String: AnyObject]]
+        let users = results?.map { $0["user"] as? [String: AnyObject] }
+        
+        let error = NSError(domain: "UserAPI", code: 0, userInfo: nil)
+        
+        if let users = users {
+            let searchResults: [RxResult<User>] = users.map { user in
+                let name = user?["name"] as? [String: String]
+                let pictures = user?["picture"] as? [String: String]
+                
+                if let firstName = name?["first"], let lastName = name?["last"], let imageURL = pictures?["medium"] {
+                    return success(User(firstName: self.ufc(firstName), lastName: self.ufc(lastName), imageURL: imageURL))
+                }
+                else {
+                    return failure(error)
+                }
+            }
+            
+            let values = (searchResults.filter { $0.isSuccess }).map { $0.get() }
+            return success(values)
+        }
+        return failure(error)
+    }
+    
+    private func ufc(string: String) -> String {
+        var result = Array(string)
+        if !string.isEmpty { result[0] = Character(String(result.first!).uppercaseString) }
+        return String(result)
+    }
+    
 }

@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		0706E1961B14AF5100BA2D3A /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0706E1951B14AF5100BA2D3A /* DetailViewController.swift */; };
+		0706E19B1B17361100BA2D3A /* UIImageView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0706E19A1B17361100BA2D3A /* UIImageView+Extensions.swift */; };
+		0706E19D1B176EE200BA2D3A /* String+extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0706E19C1B176EE200BA2D3A /* String+extensions.swift */; };
+		0706E19F1B17703E00BA2D3A /* RandomUserAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0706E19E1B17703E00BA2D3A /* RandomUserAPI.swift */; };
 		07E300071B14995F00F00100 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E300061B14995F00F00100 /* TableViewController.swift */; };
 		07E300091B149A2A00F00100 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E300081B149A2A00F00100 /* User.swift */; };
 		07E3C2331B03605B0010338D /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E3C2321B03605B0010338D /* Dependencies.swift */; };
@@ -87,6 +90,9 @@
 
 /* Begin PBXFileReference section */
 		0706E1951B14AF5100BA2D3A /* DetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
+		0706E19A1B17361100BA2D3A /* UIImageView+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImageView+Extensions.swift"; sourceTree = "<group>"; };
+		0706E19C1B176EE200BA2D3A /* String+extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+extensions.swift"; sourceTree = "<group>"; };
+		0706E19E1B17703E00BA2D3A /* RandomUserAPI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RandomUserAPI.swift; sourceTree = "<group>"; };
 		07E300061B14995F00F00100 /* TableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TableViewController.swift; sourceTree = "<group>"; };
 		07E300081B149A2A00F00100 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		07E3C2321B03605B0010338D /* Dependencies.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Dependencies.swift; path = Examples/Dependencies.swift; sourceTree = "<group>"; };
@@ -145,12 +151,39 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		07E300051B14994500F00100 /* TableView */ = {
+		0706E1A01B1770C800BA2D3A /* RandomUserAPI */ = {
 			isa = PBXGroup;
 			children = (
 				07E300081B149A2A00F00100 /* User.swift */,
+				0706E19E1B17703E00BA2D3A /* RandomUserAPI.swift */,
+			);
+			name = RandomUserAPI;
+			sourceTree = "<group>";
+		};
+		0706E1A11B1770D300BA2D3A /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
 				07E300061B14995F00F00100 /* TableViewController.swift */,
 				0706E1951B14AF5100BA2D3A /* DetailViewController.swift */,
+			);
+			name = Controllers;
+			sourceTree = "<group>";
+		};
+		0706E1A21B1770E200BA2D3A /* UIKitExtensions */ = {
+			isa = PBXGroup;
+			children = (
+				0706E19A1B17361100BA2D3A /* UIImageView+Extensions.swift */,
+				0706E19C1B176EE200BA2D3A /* String+extensions.swift */,
+			);
+			name = UIKitExtensions;
+			sourceTree = "<group>";
+		};
+		07E300051B14994500F00100 /* TableView */ = {
+			isa = PBXGroup;
+			children = (
+				0706E1A01B1770C800BA2D3A /* RandomUserAPI */,
+				0706E1A11B1770D300BA2D3A /* Controllers */,
+				0706E1A21B1770E200BA2D3A /* UIKitExtensions */,
 			);
 			path = TableView;
 			sourceTree = "<group>";
@@ -415,9 +448,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0706E19F1B17703E00BA2D3A /* RandomUserAPI.swift in Sources */,
 				C86E2F3E1AE5A0CA00C31024 /* SearchResultViewModel.swift in Sources */,
 				C83367241AD029AE00C668A7 /* HtmlParsing.swift in Sources */,
+				0706E19B1B17361100BA2D3A /* UIImageView+Extensions.swift in Sources */,
 				C8DF92E51B0B32DA009BCF9A /* RootViewController.swift in Sources */,
+				0706E19D1B176EE200BA2D3A /* String+extensions.swift in Sources */,
 				C8DF92DC1B0B3174009BCF9A /* WikipediaSearchViewController.swift in Sources */,
 				C8DF92D81B0B3174009BCF9A /* CollectionViewImageCell.swift in Sources */,
 				C86E2F3F1AE5A0CA00C31024 /* SearchViewModel.swift in Sources */,

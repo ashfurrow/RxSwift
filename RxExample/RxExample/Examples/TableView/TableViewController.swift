@@ -10,11 +10,14 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-class TableViewController: UIViewController {
+class TableViewController: ViewController {
     
     @IBOutlet weak var tableView: UITableView!
     
+    var disposeBag = DisposeBag()
+    
     let users = Variable([User]())
+    let favoriteUsers = Variable([User]())
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,32 +31,43 @@ class TableViewController: UIViewController {
             return cell
         }
         
+        let tvds = RxTableViewDataSource(cellFactory: cellFactory, sections: ["Favorite Users", "Normal users"])
+        
+        favoriteUsers
+            >- tableView.rx_subscribeRowsTo(tvds, section: 1)
+            >- disposeBag.addDisposable
+        
         users
-            >- tableView.rx_subscribeRowsTo(cellFactory)
+            >- tableView.rx_subscribeRowsTo(tvds, section: 2)
+            >- disposeBag.addDisposable
         
-        tableView.rx_rowTap()
-            >- subscribeNext { [unowned self] (tv, index) in
-                let sb = UIStoryboard(name: "Main", bundle: NSBundle(identifier: "RxExample-iOS"))
-                let vc = sb.instantiateViewControllerWithIdentifier("DetailViewController") as! DetailViewController
-                vc.user = self.getUser(index)
-                self.navigationController?.pushViewController(vc, animated: true)
+        tableView.rx_rowTapped()
+            >- subscribeNext { [unowned self] (tv, indexPath) in
+                self.showDetailsForUser(indexPath)
             }
+            >- disposeBag.addDisposable
         
-        tableView.rx_rowDelete()
-            >- subscribeNext { [unowned self] (tv, index) in
-                self.removeUser(index)
+        tableView.rx_rowDeleted()
+            >- subscribeNext { [unowned self] (tv, indexPath) in
+                self.removeUser(indexPath)
             }
+            >- disposeBag.addDisposable
         
-        tableView.rx_rowMove()
+        tableView.rx_rowMoved()
             >- subscribeNext { [unowned self] (tv, from, to) in
                 self.moveUserFrom(from, to: to)
             }
+            >- disposeBag.addDisposable
         
-        getSearchResults()
+        RandomUserAPI.sharedAPI.getExampleUserResultSet()
             >- subscribeNext { [unowned self] array in
                 self.users.next(array)
             }
+            >- disposeBag.addDisposable
         
+        
+        
+        favoriteUsers.next([User(firstName: "Super", lastName: "Man", imageURL: "http://nerdreactor.com/wp-content/uploads/2015/02/Superman1.jpg")])
     }
     
     override func setEditing(editing: Bool, animated: Bool) {
@@ -62,18 +76,61 @@ class TableViewController: UIViewController {
     }
     
     
-    // MARK: Work over Variable
+    // MARK: Navigation
     
-    func getUser(index: Int) -> User {
-        var array = users.value
-        return array[index]
+    private func showDetailsForUser(indexPath: NSIndexPath) {
+        let sb = UIStoryboard(name: "Main", bundle: NSBundle(identifier: "RxExample-iOS"))
+        let vc = sb.instantiateViewControllerWithIdentifier("DetailViewController") as! DetailViewController
+        vc.user = self.getUser(indexPath)
+        self.navigationController?.pushViewController(vc, animated: true)
     }
     
-    func moveUserFrom(from: Int, to: Int) {
-        var array = users.value
-        let user = array.removeAtIndex(from)
-        array.insert(user, atIndex: to)
-        users.next(array)
+    // MARK: Work over Variable
+    
+    func getUser(indexPath: NSIndexPath) -> User {
+        var array: [User]
+        switch indexPath.section {
+        case 0:
+            array = favoriteUsers.value
+        case 1:
+            array = users.value
+        default:
+            fatalError("Section out of range")
+        }
+        return array[indexPath.row]
+    }
+    
+    func moveUserFrom(from: NSIndexPath, to: NSIndexPath) {
+        var user: User
+        var fromArray: [User]
+        var toArray: [User]
+        
+        switch from.section {
+        case 0:
+            fromArray = favoriteUsers.value
+            user = fromArray.removeAtIndex(from.row)
+            favoriteUsers.next(fromArray)
+        case 1:
+            fromArray = users.value
+            user = fromArray.removeAtIndex(from.row)
+            users.next(fromArray)
+        default:
+            fatalError("Section out of range")
+        }
+        
+        
+        switch to.section {
+        case 0:
+            toArray = favoriteUsers.value
+            toArray.insert(user, atIndex: to.row)
+            favoriteUsers.next(toArray)
+        case 1:
+            toArray = users.value
+            toArray.insert(user, atIndex: to.row)
+            users.next(toArray)
+        default:
+            fatalError("Section out of range")
+        }
     }
     
     func addUser(user: User) {
@@ -82,56 +139,20 @@ class TableViewController: UIViewController {
         users.next(array)
     }
     
-    func removeUser(index: Int) {
-        var array = users.value
-        array.removeAtIndex(index)
-        users.next(array)
-    }
-    
-    
-    // MARK: RandomUser API
-    
-    private func getSearchResults() -> Observable<[User]> {
-        let url = NSURL(string: "http://api.randomuser.me/?results=20")!
-        return NSURLSession.sharedSession().rx_JSON(url)
-            >- observeSingleOn(Dependencies.sharedDependencies.backgroundWorkScheduler)
-            >- mapOrDie { json in
-                return castOrFail(json).flatMap { (json: [String: AnyObject]) in
-                    return self.parseJSON(json)
-                }
-            }
-            >- observeSingleOn(Dependencies.sharedDependencies.mainScheduler)
-    }
-    
-    private func parseJSON(json: [String: AnyObject]) -> RxResult<[User]> {
-        let results = json["results"] as? [[String: AnyObject]]
-        let users = results?.map { $0["user"] as? [String: AnyObject] }
-        
-        let error = NSError(domain: "UserAPI", code: 0, userInfo: nil)
-        
-        if let users = users {
-            let searchResults: [RxResult<User>] = users.map { user in
-                let name = user?["name"] as? [String: String]
-                let pictures = user?["picture"] as? [String: String]
-                
-                if let firstName = name?["first"], let lastName = name?["last"], let imageURL = pictures?["medium"] {
-                    return success(User(firstName: self.ufc(firstName), lastName: self.ufc(lastName), imageURL: imageURL))
-                }
-                else {
-                    return failure(error)
-                }
-            }
-            
-            let values = (searchResults.filter { $0.isSuccess }).map { $0.get() }
-            return success(values)
+    func removeUser(indexPath: NSIndexPath) {
+        var array: [User]
+        switch indexPath.section {
+        case 0:
+            array = favoriteUsers.value
+            array.removeAtIndex(indexPath.row)
+            favoriteUsers.next(array)
+        case 1:
+            array = users.value
+            array.removeAtIndex(indexPath.row)
+            users.next(array)
+        default:
+            fatalError("Section out of range")
         }
-        return failure(error)
-    }
-    
-    private func ufc(string: String) -> String {
-        var result = Array(string)
-        if !string.isEmpty { result[0] = Character(String(result.first!).uppercaseString) }
-        return String(result)
     }
     
 }

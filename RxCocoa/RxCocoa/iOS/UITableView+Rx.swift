@@ -15,8 +15,8 @@ import UIKit
 public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     public typealias CellFactory = (UITableView, NSIndexPath, AnyObject) -> UITableViewCell
     
-    public typealias RowDeletedObserver = ObserverOf<(tableView: UITableView, row: Int)>
-    public typealias RowMovedObserver = ObserverOf<(tableView: UITableView, from: Int, to: Int)>
+    public typealias RowDeletedObserver = ObserverOf<(tableView: UITableView, indexPath: NSIndexPath)>
+    public typealias RowMovedObserver = ObserverOf<(tableView: UITableView, from: NSIndexPath, to: NSIndexPath)>
     
     public typealias RowDeletedDisposeKey = Bag<RowDeletedObserver>.KeyType
     public typealias RowMovedDisposeKey = Bag<RowMovedObserver>.KeyType
@@ -30,14 +30,18 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
         }
     }
     
-    var _rows: [AnyObject]
+    var _sectionNames: [String]
+    var _rows: [[AnyObject]]
     
     var cellFactory: CellFactory! = nil
     
-    public init(cellFactory: CellFactory) {
+    public init(cellFactory: CellFactory, sections: [String] = [""]) {
         tableViewRowDeletedObservers = Bag()
         tableViewRowMovedObservers = Bag()
-        self._rows = []
+        self._sectionNames = sections
+        self._rows = sections.map { _ in
+            [AnyObject]()
+        }
         self.cellFactory = cellFactory
     }
     
@@ -72,20 +76,20 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     }
     
     public func numberOfSectionsInTableView(tableView: UITableView) -> Int {
-        return 1
-    }
-    
-    public func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return _rows.count
     }
     
+    public func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return _rows[section].count
+    }
+    
     public func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        if indexPath.row < _rows.count {
+        if indexPath.row < _rows[indexPath.section].count {
             let row = indexPath.row
             if cellFactory == nil {
                 rxFatalError("Please subscribe table rows using one of the 'rx_subscribeRowsTo' methods")
             }
-            return cellFactory(tableView, indexPath, self._rows[row])
+            return cellFactory(tableView, indexPath, self._rows[indexPath.section][row])
         }
         else {
             rxFatalError("something went wrong")
@@ -103,7 +107,7 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     
     public func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         if editingStyle == .Delete {
-            dispatchNext((tableView, indexPath.row), tableViewRowDeletedObservers)
+            dispatchNext((tableView, indexPath), tableViewRowDeletedObservers)
         }
     }
     
@@ -115,12 +119,19 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     }
     
     public func tableView(tableView: UITableView, moveRowAtIndexPath sourceIndexPath: NSIndexPath, toIndexPath destinationIndexPath: NSIndexPath) {
-        dispatchNext((tableView, sourceIndexPath.row, destinationIndexPath.row), tableViewRowMovedObservers)
+        dispatchNext((tableView, sourceIndexPath, destinationIndexPath), tableViewRowMovedObservers)
+    }
+    
+    public func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if count(_sectionNames[section]) > 0 {
+            return _sectionNames[section]
+        }
+        return nil
     }
 }
 
 public class RxTableViewDelegate: RxScrollViewDelegate, UITableViewDelegate {
-    public typealias RowTapedObserver = ObserverOf<(tableView: UITableView, row: Int)>
+    public typealias RowTapedObserver = ObserverOf<(tableView: UITableView, indexPath: NSIndexPath)>
     
     public typealias RowTapedDisposeKey = Bag<RowTapedObserver>.KeyType
     
@@ -148,7 +159,7 @@ public class RxTableViewDelegate: RxScrollViewDelegate, UITableViewDelegate {
     public func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
         
-        dispatchNext((tableView, indexPath.row), tableViewRowTapedObservers)
+        dispatchNext((tableView, indexPath), tableViewRowTapedObservers)
     }
     
     deinit {
@@ -165,11 +176,11 @@ extension UITableView {
     }
     
     func rx_createDataSource() -> RxTableViewDataSource {
-        return RxTableViewDataSource(cellFactory: { a, b, c in UITableViewCell() })
+        return RxTableViewDataSource(cellFactory: { _, _, _ in UITableViewCell() }, sections:[""])
     }
     
     public func rx_subscribeRowsTo<E where E: AnyObject>
-        (dataSource: RxTableViewDataSource)
+        (dataSource: RxTableViewDataSource, section: Int)
         (source: Observable<[E]>)
         -> Disposable {
         MainScheduler.ensureExecutingOnScheduler()
@@ -194,7 +205,7 @@ extension UITableView {
             switch event {
             case .Next(let boxedValue):
                 let value = boxedValue.value
-                dataSource._rows = value
+                dataSource._rows[section-1] = value
                 self.reloadData()
             case .Error(let error):
 #if DEBUG
@@ -209,32 +220,32 @@ extension UITableView {
     }
     
     public func rx_subscribeRowsTo<E where E : AnyObject>
-        (cellFactory: (UITableView, NSIndexPath, E) -> UITableViewCell)
+        (cellFactory: (UITableView, NSIndexPath, E) -> UITableViewCell, section: Int)
         (source: Observable<[E]>)
         -> Disposable {
             
-        let dataSource = RxTableViewDataSource {
-            cellFactory($0, $1, $2 as! E)
-        }
+            let dataSource = RxTableViewDataSource(cellFactory: {
+                cellFactory($0, $1, $2 as! E)
+            }, sections: [""])
             
-        return self.rx_subscribeRowsTo(dataSource)(source: source)
+        return self.rx_subscribeRowsTo(dataSource, section: section)(source: source)
     }
     
     public func rx_subscribeRowsToCellWithIdentifier<E, Cell where E : AnyObject, Cell: UITableViewCell>
-        (cellIdentifier: String, configureCell: (UITableView, NSIndexPath, E, Cell) -> Void)
+        (cellIdentifier: String, section: Int, configureCell: (UITableView, NSIndexPath, E, Cell) -> Void)
         (source: Observable<[E]>)
         -> Disposable {
             
-        let dataSource = RxTableViewDataSource {
-            let cell = $0.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: $1) as! Cell
-            configureCell($0, $1, $2 as! E, cell)
-            return cell
-        }
+            let dataSource = RxTableViewDataSource(cellFactory: {
+                let cell = $0.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: $1) as! Cell
+                configureCell($0, $1, $2 as! E, cell)
+                return cell
+            }, sections: [""])
         
-        return self.rx_subscribeRowsTo(dataSource)(source: source)
+        return self.rx_subscribeRowsTo(dataSource, section: section)(source: source)
     }
     
-    public func rx_rowTap() -> Observable<(tableView: UITableView, row: Int)> {
+    public func rx_rowTapped() -> Observable<(tableView: UITableView, indexPath: NSIndexPath)> {
         _ = rx_checkTableViewDelegate()
         
         return AnonymousObservable { observer in
@@ -258,7 +269,7 @@ extension UITableView {
         }
     }
     
-    public func rx_rowDelete() -> Observable<(tableView: UITableView, row: Int)> {
+    public func rx_rowDeleted() -> Observable<(tableView: UITableView, indexPath: NSIndexPath)> {
         _ = rx_checkTableViewDataSource()
         
         return AnonymousObservable { observer in
@@ -278,7 +289,7 @@ extension UITableView {
         }
     }
     
-    public func rx_rowMove() -> Observable<(tableView: UITableView, from: Int, to: Int)> {
+    public func rx_rowMoved() -> Observable<(tableView: UITableView, from: NSIndexPath, to: NSIndexPath)> {
         _ = rx_checkTableViewDataSource()
         
         return AnonymousObservable { observer in
@@ -298,9 +309,9 @@ extension UITableView {
         }
     }
     
-    public func rx_elementTap<E>() -> Observable<E> {
+    public func rx_elementTapped<E>() -> Observable<E> {
         
-        return rx_rowTap() >- map { (tableView, rowIndex) -> E in
+        return rx_rowTapped() >- map { (tableView, rowIndexPath) -> E in
             let maybeDataSource: RxTableViewDataSource? = self.rx_getTableViewDataSource()
             
             if maybeDataSource == nil {
@@ -309,7 +320,7 @@ extension UITableView {
             
             let dataSource = maybeDataSource!
             
-            return dataSource.rows[rowIndex] as! E
+            return dataSource.rows[rowIndexPath.row] as! E
         }
     }
     

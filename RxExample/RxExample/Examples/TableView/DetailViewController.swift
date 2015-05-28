@@ -9,10 +9,12 @@
 import UIKit
 import RxSwift
 
-class DetailViewController: UIViewController {
+class DetailViewController: ViewController {
     
     weak var masterVC: TableViewController!
     var user: User!
+    
+    let $ = Dependencies.sharedDependencies
     
     var disposeBag = DisposeBag()
     
@@ -21,17 +23,14 @@ class DetailViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        imageView.layer.cornerRadius = imageView.frame.size.width / 2
-        imageView.layer.borderColor = UIColor.darkGrayColor().CGColor
-        imageView.layer.borderWidth = 5
-        imageView.layer.masksToBounds = true
+                
+        imageView.makeRoundedCorners(5)
         
         let url = NSURL(string: user.imageURL)!
         let request = NSURLRequest(URL: url)
         
         NSURLSession.sharedSession().rx_data(request)
-            >- observeSingleOn(Dependencies.sharedDependencies.mainScheduler)
+            >- observeSingleOn($.mainScheduler)
             >- map { data in
                 UIImage(data: data)
             }
@@ -39,10 +38,6 @@ class DetailViewController: UIViewController {
             >- disposeBag.addDisposable
         
         label.text = user.firstName + " " + user.lastName
-    }
-    
-    deinit {
-        disposeBag.dispose()
     }
 
 }

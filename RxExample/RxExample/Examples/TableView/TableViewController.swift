@@ -32,7 +32,7 @@ class TableViewController: UIViewController {
             >- tableView.rx_subscribeRowsTo(cellFactory)
         
         tableView.rx_rowTap()
-            >- subscribeNext { (tv, index) in
+            >- subscribeNext { [unowned self] (tv, index) in
                 let sb = UIStoryboard(name: "Main", bundle: NSBundle(identifier: "RxExample-iOS"))
                 let vc = sb.instantiateViewControllerWithIdentifier("DetailViewController") as! DetailViewController
                 vc.user = self.getUser(index)
@@ -40,17 +40,17 @@ class TableViewController: UIViewController {
             }
         
         tableView.rx_rowDelete()
-            >- subscribeNext { (tv, index) in
+            >- subscribeNext { [unowned self] (tv, index) in
                 self.removeUser(index)
             }
         
         tableView.rx_rowMove()
-            >- subscribeNext { (tv, from, to) in
+            >- subscribeNext { [unowned self] (tv, from, to) in
                 self.moveUserFrom(from, to: to)
             }
         
         getSearchResults()
-            >- subscribeNext { array in
+            >- subscribeNext { [unowned self] array in
                 self.users.next(array)
             }
         
@@ -62,7 +62,7 @@ class TableViewController: UIViewController {
     }
     
     
-    // MARK: Work with Variable
+    // MARK: Work over Variable
     
     func getUser(index: Int) -> User {
         var array = users.value

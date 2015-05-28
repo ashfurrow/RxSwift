@@ -32,10 +32,10 @@ class DetailViewController: UIViewController {
         
         NSURLSession.sharedSession().rx_data(request)
             >- observeSingleOn(Dependencies.sharedDependencies.mainScheduler)
-            >- subscribeNext { data in
-                let image = UIImage(data: data)
-                self.imageView.image = image
+            >- map { data in
+                UIImage(data: data)
             }
+            >- imageView.rx_subscribeImageTo
             >- disposeBag.addDisposable
         
         label.text = user.firstName + " " + user.lastName

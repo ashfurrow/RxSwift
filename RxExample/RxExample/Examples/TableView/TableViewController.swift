@@ -37,7 +37,7 @@ class TableViewController: ViewController {
             ]
         }
         
-        let bridge = RxTableViewDataSourceBridge<String, User>()
+        let bridge = RxTableViewDataSource<String, User>()
         bridge.cellFactory = cellFactory
         
         allUsers

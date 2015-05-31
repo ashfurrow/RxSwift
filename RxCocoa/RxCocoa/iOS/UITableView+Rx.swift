@@ -12,7 +12,7 @@ import UIKit
 
 let tableViewWrongDelegatesMessage = "Please use rx data source `RxTableViewDataSource` and rx delegate `RxTableViewDelegate` for this table view. You can set them manually or using one of the following methods:\n    rx_subscribeTo\n    rx_subscribeToCellWithIdentifier\n    ..."
 
-public protocol RxTableViewDataSourceBridgeProtocol : class {
+public protocol RxTableViewDataSourceProtocol : class {
     func onRowsSequenceEvent(tableView: UITableView, event: AnyObject)
     func onRowsSequenceIncrementalEvent(tableView: UITableView, event: AnyObject)
     
@@ -20,16 +20,16 @@ public protocol RxTableViewDataSourceBridgeProtocol : class {
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell
     
-    func typedBridge<T>() -> T
+    func typedDataSource<T>() -> T
 }
 
-public class RxTableViewDataSourceItemsBridge<Item> {
+public class RxTableViewDataSourceItems<Item> {
     public func itemAtIndexPath(indexPath: NSIndexPath) -> Item {
         return rxAbstractMethod()
     }
 }
 
-public class RxTableViewDataSourceBridge<Section, Item> : RxTableViewDataSourceItemsBridge<Item>, RxTableViewDataSourceBridgeProtocol {
+public class RxTableViewDataSource<Section, Item> : RxTableViewDataSourceItems<Item>, RxTableViewDataSourceProtocol {
     public typealias CellFactory = (UITableView, NSIndexPath, Section, Item) -> UITableViewCell
     public typealias SectionInfo = (section: Section, items: [Item])
     
@@ -71,7 +71,7 @@ public class RxTableViewDataSourceBridge<Section, Item> : RxTableViewDataSourceI
     
     // casting 
     
-    public func typedBridge<T>() -> T {
+    public func typedDataSource<T>() -> T {
         if let dataSource = self as? T {
             return dataSource
         }
@@ -190,7 +190,7 @@ public class RxTableViewDataSourceBridge<Section, Item> : RxTableViewDataSourceI
 
 // This cannot be a generic class because of table view objc runtime that checks for
 // implemented selectors in data source
-public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
+public class RxTableViewDataSourceBridge :  NSObject, UITableViewDataSource {
     public typealias RowDeletedObserver = ObserverOf<(tableView: UITableView, indexPath: NSIndexPath)>
     public typealias RowMovedObserver = ObserverOf<(tableView: UITableView, from: NSIndexPath, to: NSIndexPath)>
     
@@ -200,9 +200,9 @@ public class RxTableViewDataSource :  NSObject, UITableViewDataSource {
     var tableViewRowDeletedObservers: Bag<RowDeletedObserver> = Bag()
     var tableViewRowMovedObservers: Bag<RowMovedObserver> = Bag()
     
-    public var bridge: RxTableViewDataSourceBridgeProtocol? = nil
+    public var bridge: RxTableViewDataSourceProtocol? = nil
     
-    private var existingBridge: RxTableViewDataSourceBridgeProtocol {
+    private var existingBridge: RxTableViewDataSourceProtocol {
         get {
             if let bridge = bridge {
                 return bridge
@@ -343,22 +343,22 @@ extension UITableView {
  
     // factory methods
     
-    public func rx_createBridge<Section, Row>() -> RxTableViewDataSourceBridge<Section, Row> {
-        return RxTableViewDataSourceBridge()
+    public func rx_createBridge<Section, Row>() -> RxTableViewDataSource<Section, Row> {
+        return RxTableViewDataSource()
     }
     
     override public func rx_createDelegate() -> RxTableViewDelegate {
         return RxTableViewDelegate()
     }
     
-    public func rx_createDataSource() -> RxTableViewDataSource {
-        return RxTableViewDataSource()
+    public func rx_createDataSource() -> RxTableViewDataSourceBridge {
+        return RxTableViewDataSourceBridge()
     }
     
     // `reloadData` - section subscription methods
     
     public func rx_subscribeSectionsTo<Section, Item>
-        (bridge: RxTableViewDataSourceBridge<Section, Item>)
+        (bridge: RxTableViewDataSource<Section, Item>)
         -> Observable<[(section: Section, items: [Item])]> -> Disposable {
         return { source in
             MainScheduler.ensureExecutingOnScheduler()
@@ -396,7 +396,7 @@ extension UITableView {
         (cellFactory: (UITableView, NSIndexPath, Item) -> UITableViewCell)
         -> Observable<[(section: Section, items: [Item])]> -> Disposable {
         return { source in
-            let bridge: RxTableViewDataSourceBridge<Section, Item> = self.rx_createBridge()
+            let bridge: RxTableViewDataSource<Section, Item> = self.rx_createBridge()
             bridge.cellFactory = { (tv, ip, _, item) in
                 return cellFactory(tv, ip, item)
             }
@@ -409,7 +409,7 @@ extension UITableView {
         (cellIdentifier: String, configureCell: (NSIndexPath, Section, Item, Cell) -> Void)
         -> Observable<[(section: Section, items: [Item])]> -> Disposable {
         return { source in
-            let dataSource = RxTableViewDataSourceBridge<Section, Item>()
+            let dataSource = RxTableViewDataSource<Section, Item>()
             dataSource.cellFactory = { (tv, indexPath, section, item) in
                 let cell = tv.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath) as! Cell
                 configureCell(indexPath, section, item, cell)
@@ -422,7 +422,7 @@ extension UITableView {
     
     // `reloadData` - items subscription methods (it's assumed that there is one section, and it has type `Void`)
     
-    public func rx_subscribeItemsTo<Item>(bridge: RxTableViewDataSourceBridge<Void, Item>)
+    public func rx_subscribeItemsTo<Item>(bridge: RxTableViewDataSource<Void, Item>)
         -> Observable<[Item]> -> Disposable {
         return { source in
             let sourceWithSections = source >- map { items in
@@ -437,7 +437,7 @@ extension UITableView {
         (cellFactory: (UITableView, NSIndexPath, Item) -> UITableViewCell)
         -> Observable<[Item]> -> Disposable {
         return { source in
-            let bridge: RxTableViewDataSourceBridge<Void, Item> = self.rx_createBridge()
+            let bridge: RxTableViewDataSource<Void, Item> = self.rx_createBridge()
             bridge.cellFactory = { (tv, ip, _, item) in
                 return cellFactory(tv, ip, item)
             }
@@ -450,7 +450,7 @@ extension UITableView {
         (cellIdentifier: String, configureCell: (NSIndexPath, Item, Cell) -> Void)
         -> Observable<[Item]> -> Disposable {
         return { source in
-            let bridge = RxTableViewDataSourceBridge<Void, Item>()
+            let bridge = RxTableViewDataSource<Void, Item>()
             bridge.cellFactory = { (tv, indexPath, section, item) in
                 let cell = tv.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath) as! Cell
                 configureCell(indexPath, item, cell)
@@ -464,7 +464,7 @@ extension UITableView {
     // `beginUpdates`/`endUpdates` subscription methods
     
     public func rx_subscribeIncrementalSectionsTo<Section, Row>
-        (bridge: RxTableViewDataSourceBridge<Section, Row>)
+        (bridge: RxTableViewDataSource<Section, Row>)
         -> Observable<IncrementalUpdateEvent<Section, Row>> -> Disposable {
         return { source in
             MainScheduler.ensureExecutingOnScheduler()
@@ -578,7 +578,7 @@ extension UITableView {
     public func rx_tappedItemContext<Section, Item>() -> Observable<(path: NSIndexPath, section: Section, item: Item)> {
         
         return rx_tappedItemIndexPath() >- map { (tableView, itemIndexPath) -> (path: NSIndexPath, section: Section, item: Item) in
-            let dataSource: RxTableViewDataSourceBridge<Section, Item> = self.rx_ensureTableViewDataSourceIsSet().existingBridge.typedBridge()
+            let dataSource: RxTableViewDataSource<Section, Item> = self.rx_ensureTableViewDataSourceIsSet().existingBridge.typedDataSource()
             
             let section = dataSource.sections[itemIndexPath.section]
             
@@ -590,7 +590,7 @@ extension UITableView {
     public func rx_tappedItem<Item>() -> Observable<Item> {
         
         return rx_tappedItemIndexPath() >- map { (tableView, itemIndexPath) -> Item in
-            let dataSource: RxTableViewDataSourceItemsBridge<Item> = self.rx_ensureTableViewDataSourceIsSet().existingBridge.typedBridge()
+            let dataSource: RxTableViewDataSourceItems<Item> = self.rx_ensureTableViewDataSourceIsSet().existingBridge.typedDataSource()
             
             return dataSource.itemAtIndexPath(itemIndexPath)
         }
@@ -599,14 +599,14 @@ extension UITableView {
     
     // private methods
     
-    private func rx_getTableViewDataSource() -> RxTableViewDataSource? {
+    private func rx_getTableViewDataSource() -> RxTableViewDataSourceBridge? {
         MainScheduler.ensureExecutingOnScheduler()
         
         if self.dataSource == nil {
             return nil
         }
         
-        let maybeDataSource = self.dataSource as? RxTableViewDataSource
+        let maybeDataSource = self.dataSource as? RxTableViewDataSourceBridge
         
         if maybeDataSource == nil {
             rxFatalError(tableViewWrongDelegatesMessage)
@@ -645,10 +645,10 @@ extension UITableView {
         return delegate
     }
     
-    private func rx_ensureTableViewDataSourceIsSet() -> RxTableViewDataSource {
+    private func rx_ensureTableViewDataSourceIsSet() -> RxTableViewDataSourceBridge {
         MainScheduler.ensureExecutingOnScheduler()
         
-        let maybeDataSource: RxTableViewDataSource? = rx_getTableViewDataSource()
+        let maybeDataSource: RxTableViewDataSourceBridge? = rx_getTableViewDataSource()
         
         if let dataSource = maybeDataSource {
             return dataSource

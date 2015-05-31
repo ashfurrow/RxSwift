@@ -39,9 +39,36 @@ func handleVoidObserverResult(result: RxResult<Void>) {
     handleObserverResult(result)
 }
 
+func contract(@autoclosure  condition: () -> Bool) {
+    if !condition() {
+        let exception = NSException(name: "ContractError", reason: "Contract failed", userInfo: nil)
+        exception.raise()
+    }
+}
+
 func rxFatalError(lastMessage: String) {
     // The temptation to comment this line is great, but please don't, it's for your own good. The choice is yours.
     fatalError(lastMessage)
+}
+
+// There are certain kinds of errors that shouldn't be silenced, but it could be weird to crash the app because of them.
+// DEBUG -> crash the app
+// RELEASE -> log to console
+func rxPossiblyFatalError(error: String) {
+#if DEBUG
+    rxFatalError(error)
+#else
+    println("[RxSwift]: \(error)")
+#endif
+}
+
+func rxFatalErrorAndDontReturn<T>(lastMessage: String) -> T {
+    rxFatalError(lastMessage)
+    return (nil as T!)!
+}
+
+func rxAbstractMethod<T>() -> T {
+    return rxFatalErrorAndDontReturn("Abstract method")
 }
 
 func handleObserverResult<T>(result: RxResult<T>) {

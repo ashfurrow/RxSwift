@@ -90,7 +90,7 @@ public class RxCollectionViewDelegate: RxScrollViewDelegate, UICollectionViewDel
 
 // This is the most simple (but probably most common) way of using rx with UICollectionView.
 extension UICollectionView {
-    override func rx_createDelegate() -> RxScrollViewDelegate {
+    override public func rx_createDelegate() -> RxScrollViewDelegate {
         return RxCollectionViewDelegate()
     }
     

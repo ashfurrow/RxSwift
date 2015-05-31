@@ -35,13 +35,13 @@ class WikipediaSearchViewController: ViewController {
         
         let viewModel = SearchViewModel(
             searchText: searchBar.rx_searchText(),
-            selectedResult: resultsTableView.rx_elementTapped()
+            selectedResult: resultsTableView.rx_tappedItem()
         )
         
         // map table view rows
         // {
         viewModel.rows
-            >- resultsTableView.rx_subscribeRowsToCellWithIdentifier("WikipediaSearchCell", section: 1) { (_, _, viewModel, cell: WikipediaSearchCell) in
+            >- resultsTableView.rx_subscribeItemsToWithCellIdentifier("WikipediaSearchCell") { (_, viewModel, cell: WikipediaSearchCell) in
                 cell.viewModel = viewModel
             }
             >- disposeBag.addDisposable

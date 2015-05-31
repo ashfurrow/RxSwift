@@ -48,7 +48,7 @@ public class RxScrollViewDelegate: NSObject, UIScrollViewDelegate {
 }
 
 extension UIScrollView {
-    func rx_createDelegate() -> RxScrollViewDelegate {
+    public func rx_createDelegate() -> RxScrollViewDelegate {
         return RxScrollViewDelegate()
     }
     

@@ -10,6 +10,10 @@
 		653C8BF41B114EB600983087 /* UIControl+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 653C8BF31B114EB600983087 /* UIControl+Rx.swift */; };
 		C8092BBB1AF50436008D9A2C /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C8092BBA1AF50436008D9A2C /* CoreData.framework */; };
 		C81553E41A98AB4A00C63152 /* RxCocoa.h in Headers */ = {isa = PBXBuildFile; fileRef = C81553E31A98AB4A00C63152 /* RxCocoa.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C832253C1B1A1A410048EC77 /* IncrementalUpdateEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C832253B1B1A1A410048EC77 /* IncrementalUpdateEvent.swift */; };
+		C832253E1B1A29F00048EC77 /* UITransactionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C832253D1B1A29F00048EC77 /* UITransactionState.swift */; };
+		C832253F1B1A29FB0048EC77 /* UITransactionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C832253D1B1A29F00048EC77 /* UITransactionState.swift */; };
+		C83225401B1A29FE0048EC77 /* IncrementalUpdateEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C832253B1B1A1A410048EC77 /* IncrementalUpdateEvent.swift */; };
 		C8633A981B08FD0600375D60 /* NSTextField+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8633A971B08FD0600375D60 /* NSTextField+Rx.swift */; };
 		C8633A9A1B08FEBB00375D60 /* NSImageView+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8633A991B08FEBB00375D60 /* NSImageView+Rx.swift */; };
 		C8633AB01B093EDF00375D60 /* ControlTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8633AAA1B093EDF00375D60 /* ControlTarget.swift */; };
@@ -46,6 +50,8 @@
 		C81553DE1A98AB4A00C63152 /* RxCocoa.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RxCocoa.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C81553E21A98AB4A00C63152 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C81553E31A98AB4A00C63152 /* RxCocoa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RxCocoa.h; sourceTree = "<group>"; };
+		C832253B1B1A1A410048EC77 /* IncrementalUpdateEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IncrementalUpdateEvent.swift; sourceTree = "<group>"; };
+		C832253D1B1A29F00048EC77 /* UITransactionState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITransactionState.swift; sourceTree = "<group>"; };
 		C8633A971B08FD0600375D60 /* NSTextField+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSTextField+Rx.swift"; sourceTree = "<group>"; };
 		C8633A991B08FEBB00375D60 /* NSImageView+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSImageView+Rx.swift"; sourceTree = "<group>"; };
 		C8633AAA1B093EDF00375D60 /* ControlTarget.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControlTarget.swift; sourceTree = "<group>"; };
@@ -146,6 +152,8 @@
 				C8633AAD1B093EDF00375D60 /* NSNotificationCenter+Rx.swift */,
 				C8633AAE1B093EDF00375D60 /* NSURLSession+Rx.swift */,
 				C8633AAF1B093EDF00375D60 /* RxCocoa.swift */,
+				C832253B1B1A1A410048EC77 /* IncrementalUpdateEvent.swift */,
+				C832253D1B1A29F00048EC77 /* UITransactionState.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -293,6 +301,7 @@
 				C88BB8EF1B07F2BE0064D411 /* UITextField+Rx.swift in Sources */,
 				C8633AB61B093EDF00375D60 /* NSNotificationCenter+Rx.swift in Sources */,
 				C88BB8E81B07F2BE0064D411 /* UIButton+Rx.swift in Sources */,
+				C832253E1B1A29F00048EC77 /* UITransactionState.swift in Sources */,
 				C8633AB41B093EDF00375D60 /* Logging.swift in Sources */,
 				C88BB8EB1B07F2BE0064D411 /* UILabel+Rx.swift in Sources */,
 				C88BB8E91B07F2BE0064D411 /* UICollectionView+Rx.swift in Sources */,
@@ -303,6 +312,7 @@
 				C8633AB01B093EDF00375D60 /* ControlTarget.swift in Sources */,
 				653C8BF41B114EB600983087 /* UIControl+Rx.swift in Sources */,
 				C8633AB21B093EDF00375D60 /* KVOObservable.swift in Sources */,
+				C832253C1B1A1A410048EC77 /* IncrementalUpdateEvent.swift in Sources */,
 				C8633AB81B093EDF00375D60 /* NSURLSession+Rx.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -316,6 +326,8 @@
 				C8633ABB1B093EDF00375D60 /* RxCocoa.swift in Sources */,
 				C8633A981B08FD0600375D60 /* NSTextField+Rx.swift in Sources */,
 				C8633AB11B093EDF00375D60 /* ControlTarget.swift in Sources */,
+				C832253F1B1A29FB0048EC77 /* UITransactionState.swift in Sources */,
+				C83225401B1A29FE0048EC77 /* IncrementalUpdateEvent.swift in Sources */,
 				C8633A9A1B08FEBB00375D60 /* NSImageView+Rx.swift in Sources */,
 				C8633AB91B093EDF00375D60 /* NSURLSession+Rx.swift in Sources */,
 				CBEEA67A1B12364200176529 /* NSSlider+Rx.swift in Sources */,

@@ -24,36 +24,39 @@ class TableViewController: ViewController {
         
         self.navigationItem.rightBarButtonItem = self.editButtonItem()
         
-        let cellFactory = { (tv:UITableView, ip: NSIndexPath, obj: AnyObject) -> UITableViewCell in
+        let cellFactory = { (tv:UITableView, ip: NSIndexPath, _: String, user: User) -> UITableViewCell in
             let cell = tv.dequeueReusableCellWithIdentifier("Cell") as! UITableViewCell
-            let user = (obj as! User)
             cell.textLabel?.text = user.firstName + " " + user.lastName
             return cell
         }
         
-        let tvds = RxTableViewDataSource(cellFactory: cellFactory, sections: ["Favorite Users", "Normal users"])
+        let allUsers: Observable<[(section: String, items: [User])]> = combineLatest(favoriteUsers, users) { favoriteUsers, users -> [(section: String, items: [User])] in
+            return [
+                (section: "Favorite Users", items: favoriteUsers),
+                (section: "Normal Users", items: users)
+            ]
+        }
         
-        favoriteUsers
-            >- tableView.rx_subscribeRowsTo(tvds, section: 1)
+        let bridge = RxTableViewDataSourceBridge<String, User>()
+        bridge.cellFactory = cellFactory
+        
+        allUsers
+            >- tableView.rx_subscribeSectionsTo(bridge)
             >- disposeBag.addDisposable
         
-        users
-            >- tableView.rx_subscribeRowsTo(tvds, section: 2)
-            >- disposeBag.addDisposable
-        
-        tableView.rx_rowTapped()
+        tableView.rx_tappedItemIndexPath()
             >- subscribeNext { [unowned self] (tv, indexPath) in
                 self.showDetailsForUser(indexPath)
             }
             >- disposeBag.addDisposable
         
-        tableView.rx_rowDeleted()
+        tableView.rx_deletedItemIndexPath()
             >- subscribeNext { [unowned self] (tv, indexPath) in
                 self.removeUser(indexPath)
             }
             >- disposeBag.addDisposable
         
-        tableView.rx_rowMoved()
+        tableView.rx_movedItemIndexPath()
             >- subscribeNext { [unowned self] (tv, from, to) in
                 self.moveUserFrom(from, to: to)
             }
